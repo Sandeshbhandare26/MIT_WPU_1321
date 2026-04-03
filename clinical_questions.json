@@ -1,0 +1,117 @@
+{
+  "personal_details": [
+    "age",
+    "gender",
+    "pregnancy_status"
+  ],
+  "emergency_types": {
+    "trauma": [
+      "heart_rate",
+      "blood_pressure",
+      "respiratory_rate",
+      "spo2",
+      "bleeding_severity",
+      "skin_circulation",
+      "mechanism_of_injury",
+      "c_spine_injury",
+      "extremity_deformity",
+      "head_neck_abnormality",
+      "chest_abnormality",
+      "overall_patient_condition",
+      "emt_clinical_judgment",
+      "time_since_symptom_onset"
+    ],
+    "cardiac": [
+      "heart_rate",
+      "blood_pressure",
+      "spo2",
+      "pain_level",
+      "chest_pain",
+      "shortness_of_breath",
+      "overall_patient_condition",
+      "emt_clinical_judgment",
+      "time_since_symptom_onset"
+    ],
+    "respiratory": [
+      "respiratory_rate",
+      "spo2",
+      "heart_rate",
+      "shortness_of_breath",
+      "airway_status",
+      "breathing_difficulty",
+      "overall_patient_condition",
+      "emt_clinical_judgment",
+      "time_since_symptom_onset"
+    ],
+    "neurological": [
+      "gcs",
+      "heart_rate",
+      "blood_pressure",
+      "spo2",
+      "seizure",
+      "dizziness",
+      "pupils",
+      "overall_patient_condition",
+      "emt_clinical_judgment",
+      "time_since_symptom_onset"
+    ],
+    "general": [
+      "heart_rate",
+      "blood_pressure",
+      "respiratory_rate",
+      "spo2",
+      "body_temperature",
+      "blood_glucose",
+      "pain_level",
+      "breathing_difficulty",
+      "dizziness",
+      "headache",
+      "abdominal_pain",
+      "nausea_vomiting",
+      "overall_patient_condition",
+      "emt_clinical_judgment",
+      "time_since_symptom_onset"
+    ],
+    "pediatric": [
+      "heart_rate",
+      "blood_pressure",
+      "respiratory_rate",
+      "spo2",
+      "body_temperature",
+      "skin_circulation",
+      "capillary_refill",
+      "airway_status",
+      "breathing_difficulty",
+      "fever",
+      "overall_patient_condition",
+      "emt_clinical_judgment",
+      "time_since_symptom_onset"
+    ],
+    "obstetric": [
+      "heart_rate",
+      "blood_pressure",
+      "spo2",
+      "bleeding_severity",
+      "chest_pain",
+      "weakness",
+      "dizziness",
+      "overall_patient_condition",
+      "emt_clinical_judgment",
+      "time_since_symptom_onset"
+    ],
+    "burn": [
+      "heart_rate",
+      "blood_pressure",
+      "respiratory_rate",
+      "spo2",
+      "burn_percentage",
+      "smoke_inhalation",
+      "skin_issues",
+      "airway_status",
+      "pain_level",
+      "overall_patient_condition",
+      "emt_clinical_judgment",
+      "time_since_symptom_onset"
+    ]
+  }
+}
