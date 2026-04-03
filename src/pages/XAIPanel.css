@@ -1,0 +1,257 @@
+.xai-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.4s ease-out;
+  padding-bottom: 40px;
+}
+
+.xai-model-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.xai-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.xai-card .card-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+.xai-description {
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+/* Feature Importance */
+.importance-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.importance-item {
+  animation: slideInUp 0.4s ease-out backwards;
+}
+.imp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.imp-feature {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.imp-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.imp-value {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  background: var(--bg-primary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+.imp-pct {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 36px;
+  text-align: right;
+}
+.imp-bar-track {
+  height: 10px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.imp-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 1s ease-out;
+  animation: slideInLeft 0.6s ease-out backwards;
+}
+
+/* Capabilities */
+.capability-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.capability-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  transition: all var(--transition-fast);
+}
+.capability-item:hover {
+  transform: translateX(4px);
+}
+.capability-item.available {
+  background: var(--success-light);
+  border-color: rgba(5,150,105,0.15);
+}
+.capability-item.unavailable {
+  background: var(--danger-light);
+  border-color: rgba(220,38,38,0.15);
+}
+.cap-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.capability-item.available .cap-icon {
+  background: rgba(5,150,105,0.15);
+  color: var(--success);
+}
+.capability-item.unavailable .cap-icon {
+  background: rgba(220,38,38,0.15);
+  color: var(--danger);
+}
+.cap-label {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.cap-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.capability-item.available .cap-status {
+  color: var(--success);
+}
+.capability-item.unavailable .cap-status {
+  color: var(--danger);
+}
+
+/* Explanation */
+.explanation-summary {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: var(--info-light);
+  border: 1px solid rgba(2,132,199,0.15);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+}
+.explanation-icon {
+  color: var(--info);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.explanation-summary p {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0;
+}
+.explanation-reasons h4 {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.explanation-reasons ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.reason-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  animation: slideInUp 0.3s ease-out backwards;
+}
+.reason-check {
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+/* Rejected Hospitals */
+.rejected-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rejected-item {
+  padding: 14px;
+  background: var(--danger-light);
+  border: 1px solid rgba(220,38,38,0.15);
+  border-radius: var(--radius-md);
+}
+.rejected-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--danger);
+}
+.rejected-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.rejected-reasons {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 24px;
+}
+.rejected-reasons li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.rejected-reasons li svg {
+  color: var(--danger);
+  flex-shrink: 0;
+}
+
+/* Actions */
+.xai-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+}
+
+@media (max-width: 1000px) {
+  .xai-grid {
+    grid-template-columns: 1fr;
+  }
+}

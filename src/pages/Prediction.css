@@ -1,0 +1,231 @@
+.prediction-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.4s ease-out;
+  padding-bottom: 40px;
+}
+
+/* Empty State */
+.prediction-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 12px;
+}
+.empty-icon {
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+.prediction-empty h3 {
+  font-size: 1.15rem;
+  color: var(--text-primary);
+}
+.prediction-empty p {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+}
+.empty-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Loading */
+.prediction-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+.loading-animation {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.loading-ring {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border: 3px solid var(--border-light);
+  border-top-color: var(--primary-500);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.loading-icon {
+  color: var(--primary-500);
+  animation: pulse 1.5s infinite;
+}
+.prediction-loading h3 {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+.prediction-loading p {
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+}
+
+/* Severity Main Card */
+.severity-main-card {
+  border-width: 2px;
+  overflow: hidden;
+}
+.sev-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px;
+}
+.sev-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.sev-score-big {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.sev-score-big .mono {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.sev-out-of {
+  font-size: 1.2rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.sev-card-body {
+  padding: 20px 28px 28px;
+}
+.sev-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.confidence-bar-wrap {
+  max-width: 400px;
+}
+.confidence-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+/* Requirements */
+.prediction-requirements {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.req-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  transition: all var(--transition-base);
+  border-width: 2px;
+}
+.req-card.needed {
+  animation: breathe 3s infinite;
+}
+.req-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.req-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.req-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.req-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.req-status.no {
+  color: var(--text-tertiary);
+}
+
+/* Features */
+.feature-card .card-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.feature-item {
+  animation: slideInUp 0.4s ease-out backwards;
+}
+.feature-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.feature-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.feature-pct {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.feature-value {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  display: block;
+}
+
+/* Actions */
+.prediction-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+}
+
+@media (max-width: 900px) {
+  .prediction-requirements {
+    grid-template-columns: 1fr;
+  }
+}
