@@ -182,7 +182,7 @@ export default function MassCasualty() {
                 <div className="mci-patient-info">
                   <div className="mci-p-top">
                     <span className="mci-p-id mono">{p.id}</span>
-                    <span className="mci-p-sev" style={{ color: severityColors[p.severity] }}>{p.severity}</span>
+                    <span className="mci-p-sev" style={{ color: severityColors[p.severity] }}>{p.severity} - {{ RED: 'Immediate', ORANGE: 'Urgent', YELLOW: 'Delayed', GREEN: 'Minor', BLACK: 'Deceased' }[p.severity] || p.severity}</span>
                   </div>
                   <span className="mci-p-complaint">{p.complaint}</span>
                   <div className="mci-p-meta">

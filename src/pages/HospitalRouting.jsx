@@ -16,7 +16,7 @@ export default function HospitalRouting() {
   const [selectedHospital, setSelectedHospital] = useState(null);
 
   // Determine severity correctly, unwrapping objects if they exist
-  const rawSeverity = patientData.aiSeverity || patientData.severity;
+  const rawSeverity = patientData?.aiSeverity || patientData?.severity || 'UNKNOWN';
   const severityStr = typeof rawSeverity === 'object' ? rawSeverity.label : rawSeverity;
   
   const hospitalsToShow = routing?.hospitals ? filterHospitals(routing.hospitals, severityStr) : [];
