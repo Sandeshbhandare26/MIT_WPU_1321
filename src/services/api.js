@@ -1,15 +1,60 @@
 /**
  * API Service — connects frontend to ML service and Firebase Functions.
  *
- * Each function first attempts the real API, and falls back to the
- * built-in demo logic if the service is unreachable.
+ * Each function first attempts the real ML API (FastAPI / emergency_triage_ml),
+ * and falls back to the built-in demo logic if the service is unreachable.
  */
+import { buildFeatures } from './featureBuilder.js';
+import { generateXAIExplanation } from './gemini.js';
 
 // ─── Configuration ───────────────────────────────────────────
 const ML_SERVICE_URL =
-  import.meta.env.VITE_ML_SERVICE_URL || "http://localhost:8000";
+  import.meta.env.VITE_ML_SERVICE_URL || "/api-ml";
 const FUNCTIONS_URL =
   import.meta.env.VITE_FUNCTIONS_URL || "http://localhost:5001/ignisia-57522/us-central1";
+
+const TOMTOM_API_KEY = '7j9r3QW5FgwRbDzy4nbfWM5O0tyvxP6R';
+
+/**
+ * Real-time Hospital Search using TomTom API
+ * Finds actual hospitals near the user's coordinates.
+ */
+export async function fetchNearbyHospitals(lat, lng) {
+  try {
+      const radius = 25000; // 25km radius
+      const url = `https://api.tomtom.com/search/2/poiSearch/hospital.json?key=${TOMTOM_API_KEY}&lat=${lat}&lon=${lng}&radius=${radius}&limit=8`;
+      
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('TomTom Search failed');
+      const data = await res.json();
+      
+      // Map TomTom results to our application's Hospital schema
+      return data.results.map((poi, index) => {
+          const dist = (poi.dist / 1000).toFixed(1);
+          return {
+              id: poi.id || `h-${index}`,
+              name: poi.poi.name,
+              address: poi.address.freeformAddress,
+              lat: poi.position.lat,
+              lng: poi.position.lon,
+              distance: parseFloat(dist),
+              eta: Math.round((dist * 3) + 5), // dynamic ETA based on distance
+              load: Math.floor(Math.random() * 60) + 20, 
+              icuAvailable: Math.floor(Math.random() * 8),
+              icuTotal: 20,
+              ventilatorAvailable: Math.floor(Math.random() * 5),
+              ventilatorTotal: 10,
+              specialties: poi.poi.classifications[0]?.code === 'HOSPITAL' ? ["Emergency", "Trauma", "General Care"] : ["Clinic", "Emergency"],
+              rating: (4.0 + (Math.random() * 1.0)).toFixed(1),
+              hasHelipad: Math.random() > 0.8,
+              traumaLevel: Math.floor(Math.random() * 3) + 1
+          };
+      });
+  } catch (error) {
+      console.error("Real-time hospital search failed:", error);
+      return []; 
+  }
+}
 
 const DELAY = () => new Promise((r) => setTimeout(r, 800 + Math.random() * 600));
 
@@ -86,86 +131,109 @@ function buildFeatureImportance(patientData) {
   }));
 }
 
-// ─── predictPatient ──────────────────────────────────────────
-export async function predictPatient(patientData) {
-  // Try real ML service
-  try {
-    const features = [
-      parseFloat(patientData.heartRate) || 80,
-      parseFloat(patientData.spo2) || 98,
-      parseFloat(patientData.respiratoryRate) || 16,
-      parseFloat(patientData.systolicBP) || 120,
-      parseFloat(patientData.gcs) || 15,
-    ];
+// ─── severity color → level mapping (used by routing logic) ─────────────
+const COLOR_TO_LEVEL = { GREEN: 0, YELLOW: 1, ORANGE: 2, RED: 3, BLACK: 4 };
+const COLOR_DETAILS = {
+  GREEN:  { level: 0, label: 'GREEN',  name: 'Minor',             color: '#059669' },
+  YELLOW: { level: 1, label: 'YELLOW', name: 'Delayed',            color: '#EAB308' },
+  ORANGE: { level: 2, label: 'ORANGE', name: 'Urgent',             color: '#D97706' },
+  RED:    { level: 3, label: 'RED',    name: 'Immediate',          color: '#DC2626' },
+  BLACK:  { level: 4, label: 'BLACK',  name: 'Deceased/Expectant', color: '#1F2937' },
+};
 
-    const response = await fetch(`${ML_SERVICE_URL}/predict`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ features }),
-      signal: AbortSignal.timeout(5000),
-    });
+export async function predictPatient(payload) {
+    try {
+        const res = await fetch(`${ML_SERVICE_URL}/predict`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ payload }),
+            // Give it a 3-second timeout before falling back
+            signal: AbortSignal.timeout(3000)
+        });
 
-    if (response.ok) {
-      const mlResult = await response.json();
-      const priorityMap = {
-        LOW: { level: 0, label: 'GREEN', name: 'Minor', color: '#059669' },
-        MODERATE: { level: 1, label: 'YELLOW', name: 'Delayed', color: '#EAB308' },
-        HIGH: { level: 2, label: 'ORANGE', name: 'Urgent', color: '#D97706' },
-        EMERGENCY: { level: 3, label: 'RED', name: 'Immediate', color: '#DC2626' },
-        CRITICAL: { level: 4, label: 'BLACK', name: 'Deceased/Expectant', color: '#1F2937' },
-      };
-      const severity = priorityMap[mlResult.priority] || priorityMap.MODERATE;
-      const severityScore = Math.round(mlResult.confidence * 100);
-
-      return {
-        severityScore,
-        severity,
-        icuNeeded: mlResult.needs_icu,
-        ventilatorNeeded: mlResult.needs_ventilator,
-        specialistNeeded: severity.level >= 2,
-        confidence: Math.round(mlResult.confidence * 100),
-        featureImportance: buildFeatureImportance(patientData),
-        timestamp: new Date().toISOString(),
-        modelVersion: "v2.4.1-golden-hour",
-        source: "ml-service",
-      };
+        if (res.ok) {
+            return await res.json();
+        }
+        
+        const err = await res.json().catch(() => ({}));
+        console.warn("ML API Error, using fallback:", err.detail || "Unknown error");
+    } catch (error) {
+        console.warn("ML Service unreachable, using clinical fallback logic.");
     }
-  } catch (err) {
-    console.warn("ML service unavailable, using fallback:", err.message);
-  }
 
-  // Fallback: local rule-based prediction
-  return fallbackPredict(patientData);
+    // Call the clinical rules-based fallback
+    return await fallbackPredict(payload);
+}
+
+/** Build a human-readable recommendation string. */
+function _buildRecommendation(level, icu, vent) {
+  if (level >= 4) return 'CRITICAL: Immediate life-saving intervention required. Notify receiving hospital NOW.';
+  if (level >= 3) return 'EMERGENCY: Immediate intervention required.' + (icu ? ' ICU bed must be pre-booked.' : '');
+  if (level >= 2) return 'URGENT: Close monitoring required.' + (vent ? ' Prepare ventilator support.' : '');
+  if (level >= 1) return 'DELAYED: Patient stable. Standard care pathway. Monitor vitals.';
+  return 'LOW: Patient stable. Routine assessment and care.';
+}
+
+/** Build hospital capability tags from ML response. */
+function _buildCapabilities(ml) {
+  const caps = ['emergency_department'];
+  if (ml.needs_icu         || ml.needs_cardiac_icu) caps.push('icu');
+  if (ml.needs_ventilator)                          caps.push('ventilator_support');
+  if (ml.needs_ct)                                  caps.push('ct_scan');
+  if (ml.needs_mri)                                 caps.push('mri');
+  if (ml.needs_emergency_ot)                        caps.push('operating_theatre');
+  if (ml.needs_blood_bank)                          caps.push('blood_bank');
+  if (ml.needs_neurosurgeon)                        caps.push('neurosurgery');
+  if (ml.needs_cardiologist)                        caps.push('cardiology');
+  return caps;
 }
 
 async function fallbackPredict(patientData) {
   await DELAY();
 
   const vitals = {
-    heartRate: patientData.heartRate || 80,
-    spo2: patientData.spo2 || 98,
+    heartRate:       patientData.heartRate       || 80,
+    spo2:            patientData.spo2            || 98,
     respiratoryRate: patientData.respiratoryRate || 16,
-    systolicBP: patientData.systolicBP || 120,
-    gcs: patientData.gcs || 15,
-    pain: patientData.pain || 3,
-    temperature: patientData.temperature || 37,
-    glucose: patientData.glucose || 100,
+    systolicBP:      patientData.systolicBP      || 120,
+    gcs:             patientData.gcs             || 15,
+    pain:            patientData.pain            || 3,
+    temperature:     patientData.temperature     || 37,
+    glucose:         patientData.glucose         || 100,
   };
 
-  const score = calculateSeverityFromVitals(vitals);
+  const score    = calculateSeverityFromVitals(vitals);
   const severity = getSeverityLevel(score);
 
+  // derive resource flags from vitals
+  const icuNeeded        = score >= 55;
+  const ventilatorNeeded = vitals.spo2 < 90 || vitals.respiratoryRate > 28;
+  const severityLabel    = severity.name;
+  const colorKey         = severity.label;
+
   return {
-    severityScore: score,
+    score:                score,
     severity,
-    icuNeeded: score >= 55,
-    ventilatorNeeded: vitals.spo2 < 90 || vitals.respiratoryRate > 28,
-    specialistNeeded: score >= 45,
-    confidence: Math.round(78 + Math.random() * 18),
-    featureImportance: buildFeatureImportance(patientData),
-    timestamp: new Date().toISOString(),
-    modelVersion: "v2.4.1-golden-hour",
-    source: "fallback",
+    needs_icu:            icuNeeded,
+    needs_ventilator:     ventilatorNeeded,
+    specialistNeeded:     score >= 45,
+    confidence:           Math.round(72 + Math.random() * 18),
+    featureImportance:    buildFeatureImportance(patientData),
+    timestamp:            new Date().toISOString(),
+    modelVersion:         'v3.0.0-fallback',
+    source:               'fallback',
+    // additional medical metadata
+    severityLabel:        severity.name,
+    priority:             score >= 60 ? 'EMERGENCY' : score >= 40 ? 'HIGH' : score >= 20 ? 'MODERATE' : 'LOW',
+    priorityLevel:        score >= 60 ? 'P1' : score >= 40 ? 'P2' : score >= 20 ? 'P3' : 'P4',
+    recommendation:       score >= 60
+                            ? 'Immediate life-saving intervention. Pre-notify ICU.'
+                            : score >= 40
+                                ? 'Stable but high-risk. Continuous monitoring required.'
+                                : 'Stable. Standard care pathway.',
+    hospitalCapabilities: icuNeeded ? ['icu', 'emergency'] : ['emergency'],
   };
 }
 
@@ -280,20 +348,34 @@ async function fallbackRoute(predictionResult) {
   reasons.push(`Distance: ${recommended.distance} km (ETA: ${recommended.eta} min)`);
   reasons.push(`Trauma Level ${recommended.traumaLevel} facility`);
 
+  let explanation = {
+    summary: `Patient routed to ${recommended.name} due to optimal resource availability and proximity.`,
+    reasons,
+    hospitalCapabilities: {
+      icuAvailable: recommended.icuAvailable > 0,
+      ventilatorAvailable: recommended.ventilatorAvailable > 0,
+      specialistAvailable: recommended.specialties.length > 2,
+      traumaLevel: recommended.traumaLevel,
+    },
+  };
+
+  try {
+    const aiExpl = await generateXAIExplanation(predictionResult, recommended);
+    if (aiExpl && aiExpl.summary) {
+       explanation.summary = aiExpl.summary;
+       if (aiExpl.reasons && aiExpl.reasons.length) {
+         explanation.reasons = aiExpl.reasons;
+       }
+    }
+  } catch (err) {
+    console.warn("AI Explanation failed, continuing with fallback explanation", err);
+  }
+
   return {
     hospitals: hospitals.map((h, i) => ({ ...h, isRecommended: i === 0, rank: i + 1 })),
     recommended,
     rejected,
-    explanation: {
-      summary: `Patient routed to ${recommended.name} due to optimal resource availability and proximity.`,
-      reasons,
-      hospitalCapabilities: {
-        icuAvailable: recommended.icuAvailable > 0,
-        ventilatorAvailable: recommended.ventilatorAvailable > 0,
-        specialistAvailable: recommended.specialties.length > 2,
-        traumaLevel: recommended.traumaLevel,
-      },
-    },
+    explanation,
     routeInfo: {
       origin: { lat: 18.515, lng: 73.856 },
       destination: { lat: recommended.lat, lng: recommended.lng },

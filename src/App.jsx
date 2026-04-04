@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import useStore from './store/useStore';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
@@ -17,7 +19,21 @@ import XAIPanel from './pages/XAIPanel';
 import MassCasualty from './pages/MassCasualty';
 import Settings from './pages/Settings';
 
+// New AI Features
+import SceneUpload from './pages/SceneUpload';
+import Navigation from './pages/Navigation';
+
 export default function App() {
+  const darkMode = useStore(state => state.settings?.darkMode);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
   return (
     <Routes>
       {/* ═══ Public routes ═══ */}
@@ -25,7 +41,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      {/* ═══ Protected routes — existing pages wrapped in auth ═══ */}
+      {/* ═══ Protected routes ═══ */}
       <Route
         path="/app"
         element={
@@ -36,6 +52,8 @@ export default function App() {
       >
         <Route index element={<Navigate to="/app/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="scene-upload" element={<SceneUpload />} />
+        <Route path="navigation" element={<Navigation />} />
         <Route path="emt-form" element={<EMTForm />} />
         <Route path="prediction" element={<Prediction />} />
         <Route path="hospital-routing" element={<HospitalRouting />} />
@@ -46,8 +64,10 @@ export default function App() {
         <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
       </Route>
 
-      {/* Legacy routes — redirect to new /app/ prefix */}
+      {/* Legacy routes */}
       <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/scene-upload" element={<Navigate to="/app/scene-upload" replace />} />
+      <Route path="/navigation" element={<Navigate to="/app/navigation" replace />} />
       <Route path="/emt-form" element={<Navigate to="/app/emt-form" replace />} />
       <Route path="/prediction" element={<Navigate to="/app/prediction" replace />} />
       <Route path="/hospital-routing" element={<Navigate to="/app/hospital-routing" replace />} />

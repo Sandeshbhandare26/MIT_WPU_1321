@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { predictPatient, routePatient, notifyHospital } from '../services/api';
+import { buildFeatures } from '../utils/featureBuilder';
 
 const defaultPatientData = {
   // Patient Info
@@ -63,6 +64,10 @@ const defaultPatientData = {
   fracture: false,
   laceration: false,
   burnInjury: false,
+
+  // AI-Based (Image Analysis)
+  aiSeverity: null,
+  isCritical: false,
 };
 
 const demoRecentCases = [
@@ -86,7 +91,9 @@ const useStore = create((set, get) => ({
   // Navigation
   currentPage: 'dashboard',
   sidebarCollapsed: false,
+  isNavigating: false,
   setCurrentPage: (page) => set({ currentPage: page }),
+  setIsNavigating: (val) => set({ isNavigating: val }),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
 
   // Patient Data
@@ -114,10 +121,45 @@ const useStore = create((set, get) => ({
   runPrediction: async () => {
     set({ predictionLoading: true });
     try {
-      const result = await predictPatient(get().patientData);
-      set({ prediction: result, predictionLoading: false });
-      return result;
+      const pData = get().patientData;
+      
+      // Send the entire patient data object to the service
+      // The backend will now use the advanced XGBoost model
+      const mlResult = await predictPatient(pData);
+      
+      const COLOR_DETAILS = {
+        GREEN:  { level: 0, label: 'GREEN',  name: 'Minor',             color: '#059669' },
+        YELLOW: { level: 1, label: 'YELLOW', name: 'Delayed',            color: '#EAB308' },
+        ORANGE: { level: 2, label: 'ORANGE', name: 'Urgent',             color: '#D97706' },
+        RED:    { level: 3, label: 'RED',    name: 'Immediate',          color: '#DC2626' },
+        BLACK:  { level: 4, label: 'BLACK',  name: 'Deceased/Expectant', color: '#1F2937' }
+      };
+      
+      const PRIORITY_TO_COLOR = {
+        LOW:      'GREEN',
+        MODERATE: 'YELLOW',
+        HIGH:     'ORANGE',
+        EMERGENCY:'RED',
+        CRITICAL: 'BLACK'
+      };
+      
+      const colorKey = PRIORITY_TO_COLOR[mlResult.priority] || 'ORANGE';
+      const severity = COLOR_DETAILS[colorKey];
+      
+      const adaptedResult = {
+        severityScore: mlResult.score || (severity.level * 25),
+        severity: severity,
+        icuNeeded: mlResult.needs_icu,
+        ventilatorNeeded: mlResult.needs_ventilator,
+        featureImportance: mlResult.details?.featureImportance || [], // Backend could provide this later
+        timestamp: new Date().toISOString(),
+        details: mlResult.details // Keep raw ML outputs for deeper analysis
+      };
+      
+      set({ prediction: adaptedResult, predictionLoading: false });
+      return adaptedResult;
     } catch (error) {
+      console.error("Prediction failed:", error);
       set({ predictionLoading: false });
       throw error;
     }
@@ -131,12 +173,62 @@ const useStore = create((set, get) => ({
     try {
       let prediction = get().prediction;
       if (!prediction) {
-        prediction = await predictPatient(get().patientData);
-        set({ prediction });
+        prediction = await get().runPrediction();
       }
-      const result = await routePatient(prediction);
-      set({ routing: result, routingLoading: false });
-      return result;
+      // 1. Get current geolocation coordinates
+      let coords = { lat: 18.5204, lng: 73.8567 }; // Default: Pune
+      try {
+        const getPosition = () => new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 }));
+        const pos = await getPosition();
+        coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      } catch (e) { console.warn("Geolocation failed, using default coords"); }
+
+      // 2. Fetch real hospitals using TomTom Search
+      const { fetchNearbyHospitals } = await import('../services/api');
+      const realHospitals = await fetchNearbyHospitals(coords.lat, coords.lng);
+
+      // 3. Attempt Backend Routing first
+      let routingResult;
+      try {
+        routingResult = await routePatient(prediction);
+        // Overwrite with real ones if backend returned mocked data
+        if (!routingResult.hospitals || routingResult.hospitals.length <= 5) {
+          if (realHospitals.length > 0) {
+            routingResult.hospitals = realHospitals.map((h, i) => ({ ...h, isRecommended: i === 0, rank: i + 1 }));
+            routingResult.recommended = realHospitals[0];
+            routingResult.routeInfo = {
+                origin: coords,
+                destination: { lat: realHospitals[0].lat, lng: realHospitals[0].lng },
+                eta: realHospitals[0].eta,
+                distance: realHospitals[0].distance
+            };
+          }
+        }
+      } catch (error) {
+        console.warn("Backend routing failed, using real-time TomTom fallback");
+        if (realHospitals.length === 0) throw new Error("No hospitals found nearby.");
+        
+        const best = realHospitals[0];
+        routingResult = {
+          hospitals: realHospitals.map((h, i) => ({ ...h, isRecommended: i === 0, rank: i + 1 })),
+          recommended: best,
+          rejected: [],
+          explanation: {
+            summary: `Patient routed to ${best.name} based on real-time TomTom proximity data.`,
+            reasons: ["Real-time distance match"]
+          },
+          routeInfo: {
+            origin: coords,
+            destination: { lat: best.lat, lng: best.lng },
+            eta: best.eta,
+            distance: best.distance
+          },
+          timestamp: new Date().toISOString()
+        };
+      }
+
+      set({ routing: routingResult, routingLoading: false });
+      return routingResult;
     } catch (error) {
       set({ routingLoading: false });
       throw error;

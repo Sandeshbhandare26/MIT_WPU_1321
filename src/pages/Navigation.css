@@ -1,0 +1,204 @@
+.nav-page {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #0F172A;
+  overflow: hidden;
+}
+
+.full-map {
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+.nav-overlay {
+  position: absolute;
+  z-index: 100;
+  width: 100%;
+  padding: 1.5rem;
+  pointer-events: none;
+}
+
+.nav-overlay.top { top: 0; }
+.nav-overlay.bottom { bottom: 0; }
+
+.glass {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px -15px rgba(0,0,0,0.4);
+  pointer-events: auto;
+}
+
+.nav-header {
+  max-width: 600px;
+  margin: 0 auto;
+  border-radius: 1.25rem;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ambulance-id {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 800;
+  color: var(--primary-500);
+  letter-spacing: 0.05em;
+}
+
+.eta-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--primary-600);
+  border-radius: 0.75rem;
+  color: white;
+  font-weight: 800;
+}
+
+.hospital-panel {
+  max-width: 500px;
+  margin-bottom: 5rem;
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+}
+
+.panel-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.h-info h3 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.h-info p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-call {
+  width: 54px;
+  height: 54px;
+  border-radius: 1.2rem;
+  background: #10B981;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-call:hover { transform: scale(1.05); background: #059669; }
+
+.vitals-mini-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 1rem;
+}
+
+.v-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.re-route-alert {
+  position: absolute;
+  top: 6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 450px;
+  background: #F59E0B;
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #1E1B4B;
+  box-shadow: 0 15px 35px rgba(245, 158, 11, 0.4);
+  z-index: 1000;
+}
+
+.alert-content {
+  display: flex;
+  gap: 1rem;
+}
+
+.alert-content h4 { font-weight: 800; margin: 0; }
+.alert-content p { margin: 0; font-size: 0.85rem; opacity: 0.9; font-weight: 600; }
+
+.btn-float-locate {
+  position: absolute;
+  right: 2rem;
+  bottom: 8rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--primary-500);
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.animate-slide-down { animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-bounce-in { animation: bounceIn 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.8); }
+  70% { transform: translateX(-50%) scale(1.05); }
+  100% { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+/* Custom Map Markers (Ambulance + Hospital) */
+.map-marker {
+  transition: all 0.3s ease;
+}
+
+.ambulance-marker {
+  background: var(--primary-600);
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.6);
+}
