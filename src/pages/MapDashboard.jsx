@@ -24,7 +24,7 @@ const getTurnIcon = (maneuver) => {
 
 export default function MapDashboard() {
   const navigate = useNavigate();
-  const { routing, booking } = useStore();
+  const { routing, booking, isNavigating } = useStore();
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const routeLayerRef = useRef(null);
@@ -33,6 +33,12 @@ export default function MapDashboard() {
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [trafficEnabled, setTrafficEnabled] = useState(true);
+  const [userLocation, setUserLocation] = useState(null);
+  const [etaCountdown, setEtaCountdown] = useState(null);
+  const [routeSummary, setRouteSummary] = useState(null);
+  const [routeData, setRouteData] = useState(null);
+  const [directions, setDirections] = useState([]);
+  const [activeDirection, setActiveDirection] = useState(0);
 
   const routeInfo = booking?.routeInfo || routing?.routeInfo;
   const targetHospital = booking?.hospital || routing?.recommended;
@@ -551,21 +557,23 @@ export default function MapDashboard() {
               <h3><Building2 size={16} /> Nearby Hospitals</h3>
             </div>
             <div className="card-body mini-hospital-list">
-              {(routing?.hospitals || []).slice(0, 4).map(h => (
+              {(hospitalsToShow || []).slice(0, 4).map(h => (
                 <div key={h.id} className={`mini-hospital ${h.isRecommended ? 'rec' : ''}`}>
                   <div className="mh-info">
                     <span className="mh-name">{h.name}</span>
-                    <span className="mh-dist mono">{h.distance} km</span>
+                    <span className="mh-dist mono">{h.distance || '--'} km</span>
                   </div>
-                  <div className="progress-bar" style={{ height: 4 }}>
+                  <div className="progress-bar-container" style={{ height: 4, background: 'var(--bg-tertiary)', borderRadius: 2, overflow: 'hidden', marginTop: 4 }}>
                     <div className="progress-fill" style={{
-                      width: `${h.load}%`,
-                      background: h.load > 80 ? 'var(--danger)' : h.load > 60 ? 'var(--warning)' : 'var(--success)'
+                      height: '100%',
+                      width: `${h.load || 0}%`,
+                      background: h.load > 80 ? 'var(--danger)' : h.load > 60 ? 'var(--warning)' : 'var(--success)',
+                      transition: 'width 1s ease-in-out'
                     }} />
                   </div>
                 </div>
               ))}
-              {!routing && <p className="rp-empty">Run routing to see hospitals</p>}
+              {(!hospitalsToShow || hospitalsToShow.length === 0) && <p className="rp-empty">Run routing to see hospitals</p>}
             </div>
           </div>
         </div>

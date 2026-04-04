@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import { useAuthContext } from '../../context/AuthContext';
-import { Search, Bell, User, Save, CheckCircle, Menu, AlertTriangle, LogOut } from 'lucide-react';
+import { Search, Bell, User, Save, CheckCircle, Menu, AlertTriangle, LogOut, Sun, Moon } from 'lucide-react';
 import './Header.css';
 
 export default function Header() {
   const navigate = useNavigate();
   const { user, logout } = useAuthContext();
-  const { lastSaved, autoSaveEnabled, triggerAutoSave, massCasualtyMode, notifications, alerts } = useStore();
+  const { lastSaved, autoSaveEnabled, triggerAutoSave, massCasualtyMode, notifications, alerts, settings, updateSetting } = useStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle');
@@ -93,6 +93,15 @@ export default function Header() {
               <span className="profile-name">{displayName}</span>
               <span className="profile-role">EMT Lead</span>
             </div>
+          </button>
+
+          <button
+            className="header-btn"
+            onClick={() => updateSetting('darkMode', !settings?.darkMode)}
+            title={settings?.darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            style={{ color: '#64748B' }}
+          >
+            {settings?.darkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
           <button

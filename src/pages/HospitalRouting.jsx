@@ -1,20 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import toast from 'react-hot-toast';
 import {
   Building2, MapPin, Activity, Heart, Wind, Star, Clock,
-  CheckCircle, ArrowRight, Zap, AlertTriangle, ChevronRight, Plane
+  CheckCircle, ArrowRight, Zap, AlertTriangle, ChevronRight, Plane, Loader2
 } from 'lucide-react';
 import './HospitalRouting.css';
 
+import { filterHospitals } from '../utils/filterHospitals';
+
 export default function HospitalRouting() {
   const navigate = useNavigate();
-  const { routing, routingLoading, runRouting, confirmBooking, bookingLoading, booking } = useStore();
+  const { routing, routingLoading, runRouting, confirmBooking, bookingLoading, booking, patientData, setIsNavigating } = useStore();
   const [selectedHospital, setSelectedHospital] = useState(null);
 
+  // Determine severity correctly, unwrapping objects if they exist
+  const rawSeverity = patientData.aiSeverity || patientData.severity;
+  const severityStr = typeof rawSeverity === 'object' ? rawSeverity.label : rawSeverity;
+  
+  const hospitalsToShow = routing?.hospitals ? filterHospitals(routing.hospitals, severityStr) : [];
+
+  useEffect(() => {
+    // Auto-run routing if there's no data and not loading right now
+    if (!routing && !routingLoading) {
+      handleRunRouting();
+    }
+  }, []);
+
   const handleRunRouting = async () => {
-    try { await runRouting(); } catch { toast.error('Routing failed'); }
+    try { 
+      await runRouting(); 
+    } catch (e) { 
+      toast.error('Routing failed: ' + (e?.message || 'Unknown error')); 
+    }
   };
 
   const handleConfirm = async () => {
@@ -40,13 +59,13 @@ export default function HospitalRouting() {
           </div>
         </div>
         <div className="routing-empty card">
-          <Building2 size={48} className="empty-icon" />
-          <h3>No Routing Data Available</h3>
-          <p>Run the triage prediction first, then route to the best hospital.</p>
+          <AlertTriangle size={48} className="empty-icon warning-icon" />
+          <h3>No Routing Data Found</h3>
+          <p>We couldn't automatically locate nearby hospitals right now.</p>
           <div className="empty-actions">
-            <button className="btn btn-outline" onClick={() => navigate('/prediction')}>Go to Prediction</button>
+            <button className="btn btn-outline" onClick={() => navigate('/app/triage')}>Go to Triage</button>
             <button className="btn btn-primary" onClick={handleRunRouting}>
-              <Zap size={16} />Run Routing Now
+              <Zap size={16} /> Retry Routing
             </button>
           </div>
         </div>
@@ -57,14 +76,18 @@ export default function HospitalRouting() {
   if (routingLoading) {
     return (
       <div className="routing-page">
-        <div className="page-header"><h2>Hospital Routing</h2></div>
-        <div className="routing-loading card">
-          <div className="loading-animation">
-            <div className="loading-ring" />
-            <Building2 size={32} className="loading-icon" />
+        <div className="page-header">
+          <div>
+            <h2>Hospital Routing</h2>
+            <p className="page-subtitle">Scanning local grids...</p>
           </div>
-          <h3>Finding Optimal Hospital...</h3>
-          <p>Analyzing distance, capacity, and resource availability</p>
+        </div>
+        <div className="routing-loading card glass-card">
+          <div className="loading-animation">
+            <Loader2 size={40} className="loading-icon spin-icon" />
+          </div>
+          <h3 className="gradient-text">Finding Optimal Hospital...</h3>
+          <p>Analyzing distance, capacity, and resource availability in real-time</p>
         </div>
       </div>
     );
@@ -117,7 +140,7 @@ export default function HospitalRouting() {
               </div>
             </div>
           </div>
-          <button className="btn btn-primary" onClick={() => navigate('/map')}>
+          <button className="btn btn-primary" onClick={() => { setIsNavigating(true); navigate('/app/navigation'); }}>
             <MapPin size={16} /> Track on Map <ArrowRight size={14} />
           </button>
         </div>
@@ -125,7 +148,7 @@ export default function HospitalRouting() {
 
       {/* Hospital Cards */}
       <div className="hospital-grid">
-        {routing.hospitals.map((h, i) => (
+        {hospitalsToShow.map((h, i) => (
           <div
             key={h.id}
             className={`hospital-card card ${h.isRecommended ? 'recommended' : ''} ${selectedHospital?.id === h.id ? 'selected' : ''}`}

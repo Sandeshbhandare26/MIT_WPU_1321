@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import {
   Users, AlertTriangle, Building2, Clock, Activity, TrendingUp,
-  ArrowRight, ArrowUpRight, ArrowDownRight, ChevronRight, Zap
+  ArrowRight, ArrowUpRight, ArrowDownRight, ChevronRight, Zap, Camera
 } from 'lucide-react';
 import './Dashboard.css';
 
@@ -72,9 +72,14 @@ export default function Dashboard() {
           <h2>Dashboard Overview</h2>
           <p className="page-subtitle">Real-time emergency triage monitoring</p>
         </div>
-        <button className="btn btn-primary" onClick={() => navigate('/emt-form')}>
-          <Zap size={16} /> New Triage
-        </button>
+        <div className="header-actions">
+          <button className="btn btn-outline" onClick={() => navigate('/app/scene-upload')}>
+            <Camera size={16} /> Start AI Emergency
+          </button>
+          <button className="btn btn-primary" onClick={() => navigate('/app/emt-form')}>
+            <Zap size={16} /> New Triage
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

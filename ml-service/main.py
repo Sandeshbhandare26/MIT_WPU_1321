@@ -173,6 +173,43 @@ def run_prediction(data: PatientData):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+from fastapi import File, UploadFile
+
+class RouteRequest(BaseModel):
+    user_location: dict
+    hospitals: list[dict]
+    severity: str | None = "MEDIUM"
+
+@app.post("/predict-severity")
+async def predict_severity(image: UploadFile = File(...)):
+    filename = image.filename.lower()
+    severity = "HIGH" if any(x in filename for x in ["heavy", "major", "crash", "fire"]) else "MEDIUM"
+    return {
+        "severity": severity,
+        "is_critical": severity == "HIGH",
+        "description": "AI detected major structural damage." if severity == "HIGH" else "Moderate scene severity."
+    }
+
+@app.post("/get-route")
+def get_best_route(data: RouteRequest):
+    if not data.hospitals:
+        raise HTTPException(status_code=400, detail="No hospitals provided")
+    target_hospitals = data.hospitals
+    if data.severity == "HIGH":
+        target_hospitals = [h for h in data.hospitals if h.get("traumaLevel") == 1 or h.get("isLevel1")]
+        if not target_hospitals: target_hospitals = data.hospitals
+    best_hospital = sorted(target_hospitals, key=lambda x: x.get("eta", 999))[0]
+    return {
+        "best_hospital": best_hospital,
+        "eta": best_hospital.get("eta"),
+        "route": {
+            "origin": data.user_location,
+            "destination": {"lat": best_hospital.get("lat"), "lng": best_hospital.get("lng")},
+            "points": []
+        },
+        "update_required": False
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

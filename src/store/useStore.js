@@ -64,6 +64,10 @@ const defaultPatientData = {
   fracture: false,
   laceration: false,
   burnInjury: false,
+
+  // AI-Based (Image Analysis)
+  aiSeverity: null,
+  isCritical: false,
 };
 
 const demoRecentCases = [
@@ -87,7 +91,9 @@ const useStore = create((set, get) => ({
   // Navigation
   currentPage: 'dashboard',
   sidebarCollapsed: false,
+  isNavigating: false,
   setCurrentPage: (page) => set({ currentPage: page }),
+  setIsNavigating: (val) => set({ isNavigating: val }),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
 
   // Patient Data

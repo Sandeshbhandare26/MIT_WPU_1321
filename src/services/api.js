@@ -5,10 +5,11 @@
  * and falls back to the built-in demo logic if the service is unreachable.
  */
 import { buildFeatures } from './featureBuilder.js';
+import { generateXAIExplanation } from './gemini.js';
 
 // ─── Configuration ───────────────────────────────────────────
 const ML_SERVICE_URL =
-  import.meta.env.VITE_ML_SERVICE_URL || "http://localhost:8000";
+  import.meta.env.VITE_ML_SERVICE_URL || "/api-ml";
 const FUNCTIONS_URL =
   import.meta.env.VITE_FUNCTIONS_URL || "http://localhost:5001/ignisia-57522/us-central1";
 
@@ -347,20 +348,34 @@ async function fallbackRoute(predictionResult) {
   reasons.push(`Distance: ${recommended.distance} km (ETA: ${recommended.eta} min)`);
   reasons.push(`Trauma Level ${recommended.traumaLevel} facility`);
 
+  let explanation = {
+    summary: `Patient routed to ${recommended.name} due to optimal resource availability and proximity.`,
+    reasons,
+    hospitalCapabilities: {
+      icuAvailable: recommended.icuAvailable > 0,
+      ventilatorAvailable: recommended.ventilatorAvailable > 0,
+      specialistAvailable: recommended.specialties.length > 2,
+      traumaLevel: recommended.traumaLevel,
+    },
+  };
+
+  try {
+    const aiExpl = await generateXAIExplanation(predictionResult, recommended);
+    if (aiExpl && aiExpl.summary) {
+       explanation.summary = aiExpl.summary;
+       if (aiExpl.reasons && aiExpl.reasons.length) {
+         explanation.reasons = aiExpl.reasons;
+       }
+    }
+  } catch (err) {
+    console.warn("AI Explanation failed, continuing with fallback explanation", err);
+  }
+
   return {
     hospitals: hospitals.map((h, i) => ({ ...h, isRecommended: i === 0, rank: i + 1 })),
     recommended,
     rejected,
-    explanation: {
-      summary: `Patient routed to ${recommended.name} due to optimal resource availability and proximity.`,
-      reasons,
-      hospitalCapabilities: {
-        icuAvailable: recommended.icuAvailable > 0,
-        ventilatorAvailable: recommended.ventilatorAvailable > 0,
-        specialistAvailable: recommended.specialties.length > 2,
-        traumaLevel: recommended.traumaLevel,
-      },
-    },
+    explanation,
     routeInfo: {
       origin: { lat: 18.515, lng: 73.856 },
       destination: { lat: recommended.lat, lng: recommended.lng },
