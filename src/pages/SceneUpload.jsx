@@ -9,6 +9,7 @@ import {
 import './SceneUpload.css';
 import LiveCamera from '../components/LiveCamera';
 import ExplainPanel from '../components/ExplainPanel';
+import VoiceInput from '../components/VoiceInput';
 import { notifyHospital } from '../services/notifyService';
 
 export default function SceneUpload() {
@@ -132,6 +133,24 @@ export default function SceneUpload() {
           </div>
         )}
       </div>
+
+      <VoiceInput onSeverityDetected={(severity, text) => {
+        setPatientField('aiSeverity', severity);
+        setPatientField('isCritical', severity === 'HIGH');
+        setPatientField('clinicalNotes', text);
+        
+        if (severity === 'HIGH') {
+            toast.error('CRITICAL VOICE DETECTED: Auto-notifying network', {
+              icon: '🚨',
+              duration: 5000,
+              style: { background: '#991B1B', color: '#fff' }
+            });
+            notifyHospital('HOSP-001', severity, 15);
+            setTimeout(() => proceedToHospitals(), 2000);
+        } else if (severity === 'MEDIUM' || severity === 'LOW') {
+            toast.success(`Severity ${severity} detected. Ready for routing.`);
+        }
+      }} />
 
       <div className="info-grid mt-8">
         <div className="info-card">

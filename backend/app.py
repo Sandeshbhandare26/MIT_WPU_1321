@@ -4,6 +4,7 @@ from flask_cors import CORS
 from routes.live_prediction import live_prediction_bp
 from routes.explain import explain_bp
 from routes.notify import notify_bp
+from routes.voice import voice_bp
 
 app = Flask(__name__)
 CORS(app) # Enable CORS for frontend
@@ -12,6 +13,7 @@ CORS(app) # Enable CORS for frontend
 app.register_blueprint(live_prediction_bp)
 app.register_blueprint(explain_bp)
 app.register_blueprint(notify_bp)
+app.register_blueprint(voice_bp)
 
 @app.route("/")
 def home():

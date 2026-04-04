@@ -11,6 +11,7 @@ import {
   Ambulance, Cross, Pill, Gauge, Sparkles, MapPin
 } from 'lucide-react';
 import './EMTForm.css';
+import VoiceInput from '../components/VoiceInput';
 
 /* ═══════════════════════════════════════════
    LOCATION PICKER (GOOGLE MAP TILES)
@@ -563,6 +564,43 @@ export default function EMTForm() {
         <div className="progress-bar">
           <div className="progress-fill" style={{ width: `${overallProgress}%` }} />
         </div>
+      </div>
+
+      {/* ═══════════════ AI VOICE INPUT ASSISTANT ═══════════════ */}
+      <div className="w-full mb-8 animate-fade-in z-10 relative">
+        <VoiceInput onSeverityDetected={(sev, text) => {
+          const updates = {};
+          const lowerText = text.toLowerCase();
+          
+          // Structure Parsing Logic
+          const ageMatch = lowerText.match(/(\d+)\s*(year|yr)[s]?\s*old/);
+          if (ageMatch) updates.age = parseInt(ageMatch[1]);
+          else if (lowerText.match(/age\s*(\d+)/)) updates.age = parseInt(lowerText.match(/age\s*(\d+)/)[1]);
+
+          if (lowerText.includes('male') && !lowerText.includes('female')) updates.gender = 'male';
+          if (lowerText.includes('female')) updates.gender = 'female';
+          if (lowerText.includes('pregnant')) updates.pregnancy = true;
+
+          const painMatch = lowerText.match(/pain.*(\d)/);
+          if (painMatch) updates.pain = parseInt(painMatch[1]);
+
+          if (lowerText.includes('accident') || lowerText.includes('trauma') || lowerText.includes('crash')) updates.emergencyType = 'trauma';
+          else if (lowerText.includes('heart') || lowerText.includes('cardiac') || lowerText.includes('chest pain')) updates.emergencyType = 'cardiac';
+          else if (lowerText.includes('breath') || lowerText.includes('asthma')) updates.emergencyType = 'respiratory';
+          else if (lowerText.includes('burn') || lowerText.includes('fire')) updates.emergencyType = 'burn';
+
+          // Apply parsed data to the form
+          Object.entries(updates).forEach(([k, v]) => updateField(k, v));
+          if (updates.emergencyType) setEmergencyType(updates.emergencyType);
+
+          updateField('chiefComplaint', (localData.chiefComplaint ? localData.chiefComplaint + '\n' : '') + text);
+          
+          if (Object.keys(updates).length > 0) {
+             toast.success(`Voice Data Parsed: Auto-filled ${Object.keys(updates).length} fields!`);
+          } else {
+             toast.success('Voice note added to Chief Complaint!');
+          }
+        }} />
       </div>
 
       {/* ═══════════════ STEP CONTENT ═══════════════ */}
