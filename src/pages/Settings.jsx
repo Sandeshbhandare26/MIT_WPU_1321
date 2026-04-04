@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useStore from '../store/useStore';
+import { useAuthContext } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import {
   User, Settings as SettingsIcon, Database, Wifi, WifiOff, Server,
-  Bell, Moon, Sun, Volume2, VolumeX, Shield, Key, Globe, CheckCircle, XCircle
+  Bell, Moon, Sun, Volume2, VolumeX, Shield, Key, Globe, CheckCircle, XCircle, LogOut
 } from 'lucide-react';
 import './Settings.css';
 
 export default function Settings() {
   const { settings, updateSetting } = useStore();
+  const { user, logout } = useAuthContext();
   const [apiStatus, setApiStatus] = useState('connected');
   const [firebaseStatus, setFirebaseStatus] = useState('demo');
+
+  // Fallback defaults if auth object is missing some meta fields
+  const userName = user?.displayName || user?.name || 'Dr. Anand Sharma';
+  const userEmail = user?.email || 'a.sharma@goldenhour.health';
+  const userRole = user?.role || 'EMT Lead — Paramedic';
+  const userUnit = user?.unit || 'Ambulance Unit 7 — Sector 12';
 
   const handleTestAPI = () => {
     setApiStatus('testing');
@@ -23,8 +31,8 @@ export default function Settings() {
   const handleTestFirebase = () => {
     setFirebaseStatus('testing');
     setTimeout(() => {
-      setFirebaseStatus('demo');
-      toast('Firebase running in demo mode', { icon: 'ℹ️' });
+      setFirebaseStatus(user?.providerId ? 'connected' : 'demo');
+      toast(user?.providerId ? 'Firebase connection successful' : 'Firebase running in demo mode', { icon: 'ℹ️' });
     }, 1500);
   };
 
@@ -35,6 +43,9 @@ export default function Settings() {
           <h2>Settings</h2>
           <p className="page-subtitle">System configuration & connectivity</p>
         </div>
+        <button className="btn btn-outline" onClick={logout} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <LogOut size={16} /> Sign Out
+        </button>
       </div>
 
       <div className="settings-grid">
@@ -46,24 +57,28 @@ export default function Settings() {
           <div className="card-body">
             <div className="profile-section">
               <div className="profile-avatar-large">
-                <User size={32} />
+                {user?.photoURL ? (
+                  <img src={user.photoURL} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <User size={32} />
+                )}
               </div>
               <div className="profile-details">
                 <div className="profile-field">
                   <label>Name</label>
-                  <input type="text" className="input" defaultValue="Dr. Anand Sharma" />
+                  <input type="text" className="input" defaultValue={userName} readOnly />
                 </div>
                 <div className="profile-field">
                   <label>Role</label>
-                  <input type="text" className="input" defaultValue="EMT Lead — Paramedic" readOnly />
+                  <input type="text" className="input" defaultValue={userRole} readOnly />
                 </div>
                 <div className="profile-field">
                   <label>Unit</label>
-                  <input type="text" className="input" defaultValue="Ambulance Unit 7 — Sector 12" readOnly />
+                  <input type="text" className="input" defaultValue={userUnit} readOnly />
                 </div>
                 <div className="profile-field">
                   <label>Email</label>
-                  <input type="email" className="input" defaultValue="a.sharma@goldenhour.health" />
+                  <input type="email" className="input" defaultValue={userEmail} readOnly />
                 </div>
               </div>
             </div>

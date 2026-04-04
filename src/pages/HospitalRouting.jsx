@@ -16,7 +16,7 @@ export default function HospitalRouting() {
   const [selectedHospital, setSelectedHospital] = useState(null);
 
   // Determine severity correctly, unwrapping objects if they exist
-  const rawSeverity = patientData.aiSeverity || patientData.severity;
+  const rawSeverity = patientData?.aiSeverity || patientData?.severity || 'UNKNOWN';
   const severityStr = typeof rawSeverity === 'object' ? rawSeverity.label : rawSeverity;
   
   const hospitalsToShow = routing?.hospitals ? filterHospitals(routing.hospitals, severityStr) : [];
@@ -140,9 +140,17 @@ export default function HospitalRouting() {
               </div>
             </div>
           </div>
-          <button className="btn btn-primary" onClick={() => { setIsNavigating(true); navigate('/app/navigation'); }}>
-            <MapPin size={16} /> Track on Map <ArrowRight size={14} />
-          </button>
+          <div className="booking-actions" style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+            <button className="btn btn-primary" onClick={() => { setIsNavigating(true); navigate('/app/navigation'); }} style={{ flex: 1 }}>
+              <MapPin size={16} /> Track internally <ArrowRight size={14} />
+            </button>
+            <button className="btn btn-outline" onClick={() => {
+              const url = `https://www.google.com/maps/dir/?api=1&destination=${booking.hospital.lat},${booking.hospital.lng}&travelmode=driving`;
+              window.open(url, '_blank');
+            }} style={{ flex: 1 }}>
+              <MapPin size={16} /> Google Maps
+            </button>
+          </div>
         </div>
       )}
 

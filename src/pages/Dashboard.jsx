@@ -116,7 +116,9 @@ export default function Dashboard() {
                     <td className="mono case-id">{c.id}</td>
                     <td>
                       <span className="severity-dot" style={{ background: severityColors[c.severity] }} />
-                      <span className="severity-text" style={{ color: severityColors[c.severity] }}>{c.severity}</span>
+                      <span className="severity-text" style={{ color: severityColors[c.severity] }}>{c.severity} - {
+                        { RED: 'Immediate', ORANGE: 'Urgent', YELLOW: 'Delayed', GREEN: 'Minor', BLACK: 'Deceased' }[c.severity]
+                      }</span>
                     </td>
                     <td>
                       <span className="status-badge" style={{ background: `${statusColors[c.status]}14`, color: statusColors[c.status] }}>

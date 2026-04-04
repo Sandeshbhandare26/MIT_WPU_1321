@@ -2,12 +2,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import {
   LayoutDashboard, ClipboardList, Brain, Building2, Map, Lightbulb,
-  AlertTriangle, SettingsIcon, ChevronLeft, ChevronRight, Activity, Heart
+  AlertTriangle, SettingsIcon, ChevronLeft, ChevronRight, Activity, Heart, Camera
 } from 'lucide-react';
 import './Sidebar.css';
 
 const navItems = [
   { id: 'dashboard', path: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'scene-upload', path: '/app/scene-upload', label: 'AI Camera', icon: Camera },
   { id: 'emt-form', path: '/app/emt-form', label: 'EMT Form', icon: ClipboardList },
   { id: 'prediction', path: '/app/prediction', label: 'Prediction', icon: Brain },
   { id: 'hospital-routing', path: '/app/hospital-routing', label: 'Hospital Routing', icon: Building2 },
